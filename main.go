@@ -1,8 +1,9 @@
-package server
+package main
 
 import (
 	"fmt"
 	"gcache/concurrent"
+	"gcache/server"
 	"log"
 	"net/http"
 )
@@ -24,7 +25,7 @@ func main() {
 		}))
 
 	addr := "localhost:9999"
-	peers := NewHTTPPool(addr)
+	peers := server.NewHTTPPool(addr)
 	log.Println("geecache is running at", addr)
 	log.Fatal(http.ListenAndServe(addr, peers))
 }
