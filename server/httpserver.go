@@ -50,12 +50,14 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	view, err := group.Get(key)
+	value, err := group.Get(key)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Write(view.ByteSlice())
+	res := []byte(value.ByteSlice())
+	res = append(res, '\n')
+	w.Write(res)
 }
