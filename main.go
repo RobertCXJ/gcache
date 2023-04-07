@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"gcache/concurrent"
-	"gcache/server"
 	"log"
 	"net/http"
 )
@@ -14,7 +13,7 @@ var db = map[string]string{
 	"Sam":  "567",
 }
 
-// test httpserver.go
+// test http.go
 func main() {
 	concurrent.NewGroup("scores", 2<<10, concurrent.GetterFunc(
 		func(key string) ([]byte, error) {
@@ -26,7 +25,7 @@ func main() {
 		}))
 
 	addr := "localhost:9999"
-	peers := server.NewHTTPPool(addr)
+	peers := NewHTTPPool(addr)
 	log.Println("geecache is running at", addr)
 	log.Fatal(http.ListenAndServe(addr, peers))
 }
