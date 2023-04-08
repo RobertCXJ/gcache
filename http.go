@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"gcache/concurrent"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -50,7 +49,7 @@ func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	groupName := parts[0]
 	key := parts[1]
 
-	group := concurrent.GetGroup(groupName)
+	group := GetGroup(groupName)
 	if group == nil {
 		http.Error(w, "no such group: "+groupName, http.StatusNotFound)
 		return

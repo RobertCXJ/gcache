@@ -1,4 +1,4 @@
-package concurrent
+package main
 
 // 支持并发读写
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"gcache/concurrent"
 	"log"
 	"net/http"
 )
@@ -15,7 +14,7 @@ var db = map[string]string{
 
 // test http.go
 func main() {
-	concurrent.NewGroup("scores", 2<<10, concurrent.GetterFunc(
+	NewGroup("scores", 2<<10, GetterFunc(
 		func(key string) ([]byte, error) {
 			log.Println("[SlowDB] search key", key)
 			if v, ok := db[key]; ok {
