@@ -2,19 +2,28 @@ package main
 
 import (
 	"fmt"
+	"gcache/consistenthash"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 )
 
-const defaultBasePath = "/_gcache/"
+const (
+	defaultBasePath = "/_gcache/"
+	defaultReplicas = 50
+)
 
 // HTTPPool implements PeerPicker for a pool of HTTP peers.
 type HTTPPool struct {
-	self     string
-	basePath string
+	// this peer's base URL, e.g. "https://example.net:8000"
+	self        string
+	basePath    string
+	mu          sync.Mutex // guards peers and httpGetters
+	peers       *consistenthash.Map
+	httpGetters map[string]*httpGetter // keyed by e.g. "http://10.0.0.2:8008"
 }
 
 type httpGetter struct {
@@ -89,6 +98,29 @@ func (h *httpGetter) Get(group string, key string) ([]byte, error) {
 	}
 
 	return bytes, nil
+}
+
+// Set updates the pool's list of peers.
+func (p *HTTPPool) Set(peers ...string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.peers = consistenthash.New(defaultReplicas, nil)
+	p.peers.Add(peers...)
+	p.httpGetters = make(map[string]*httpGetter, len(peers))
+	for _, peer := range peers {
+		p.httpGetters[peer] = &httpGetter{baseURL: peer + p.basePath}
+	}
+}
+
+// PickPeer picks a peer according to key
+func (p *HTTPPool) PickPeer(key string) (PeerGetter, bool) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if peer := p.peers.Get(key); peer != "" && peer != p.self {
+		p.Log("Pick peer %s", peer)
+		return p.httpGetters[peer], true
+	}
+	return nil, false
 }
 
 var _ PeerGetter = (*httpGetter)(nil)
